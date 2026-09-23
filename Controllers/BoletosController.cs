@@ -4,5 +4,15 @@ namespace ExamenFinalVanguardia574.Controllers;
 [Route("api/[controller]")]
 public class BoletosController : ControllerBase
 {
+    private readonly LibraryDbContext _db;
+
+    public BoletosController(LibraryDbContext db) => _db = db;
     
+[HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var boletos = await _db.Boletos.ToListAsync();
+        return Ok(boletos);
+    }
 }
+
