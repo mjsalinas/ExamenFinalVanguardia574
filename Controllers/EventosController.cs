@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketExpress.Models;
+using TicketExpress.Common;
 
 namespace TicketExpress.Controllers;
 
@@ -42,6 +43,8 @@ public class EventosController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Evento evento)
     {
+        evento.Nombre = TextNormalizer.NormalizarNombrePropio(evento.Nombre);
+        evento.Ciudad = TextNormalizer.NormalizarNombrePropio(evento.Ciudad);
         _db.Eventos.Add(evento);
         await _db.SaveChangesAsync();
 
@@ -59,8 +62,9 @@ public class EventosController : ControllerBase
         if (evento is null)
             return NotFound($"No existe un evento con el id {id}.");
 
-        evento.Nombre = eventoActualizado.Nombre;
-        evento.Ciudad = eventoActualizado.Ciudad;
+        evento.Nombre = TextNormalizer.NormalizarNombrePropio(eventoActualizado.Nombre);
+        evento.Ciudad = TextNormalizer.NormalizarNombrePropio(eventoActualizado.Ciudad);
+
         evento.Fecha = eventoActualizado.Fecha;
         evento.CapacidadTotal = eventoActualizado.CapacidadTotal;
         evento.PrecioBoleto = eventoActualizado.PrecioBoleto;

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketExpress.Models;
+using TicketExpress.Common;
 
 namespace TicketExpress.Controllers;
 
@@ -41,6 +42,8 @@ public class BoletosController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Boleto boleto)
     {
+        boleto.NombreComprador = TextNormalizer.NormalizarNombrePropio(boleto.NombreComprador);
+        
         boleto.FechaCompra = DateTime.UtcNow;
 
         _db.Boletos.Add(boleto);
