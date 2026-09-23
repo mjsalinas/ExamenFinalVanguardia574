@@ -15,4 +15,15 @@ public class EventosController : ControllerBase
         var eventos = await _db.Eventos.ToListAsync();
         return Ok(eventos);
     }
+
+[HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var evento = await _db.Eventos.FindAsync(id);
+        if (evento == null)
+        {
+            return NotFound();
+        }
+        return Ok(evento);
+    }
 }

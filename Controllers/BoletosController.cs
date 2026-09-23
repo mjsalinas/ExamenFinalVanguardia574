@@ -14,5 +14,16 @@ public class BoletosController : ControllerBase
         var boletos = await _db.Boletos.ToListAsync();
         return Ok(boletos);
     }
+
+[HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var boleto = await _db.Boletos.FindAsync(id);
+        if (boleto == null)
+        {
+            return NotFound();
+        }
+        return Ok(boleto);
+    }
 }
 
