@@ -74,10 +74,26 @@ guiones o apóstrofes.
 
 
 
-    // Regla de negocio (futuro Domain Service): no registrar boletos duplicados.
-    //var duplicado = await ExisteBoletoDuplicadoAsync(boleto.Nombre, boleto.Nacionalidad);
-    //if (duplicado)
-    //return Conflict("Ya existe un boleto con el mismo nombre y nacionalidad.");
+        // Regla de negocio (futuro Domain Service): No se puede crear un Boleto si la Cantidad solicitada supera los boletos disponibles del evento(CapacidadTotal menos la suma de Cantidad de todos los boletos ya vendidos para ese Evento)
+        var capacidadTotalEvento = await _db.Eventos
+            .Where(e => e.Id == boleto.EventoId)
+            .Select(e => e.CapacidadTotal)
+            .FirstOrDefaultAsync();
+
+        if (boleto.Cantidad > capacidadTotalEvento)
+            return BadRequest("La cantidad solicitada supera los boletos disponibles para el evento.");
+
+        //.No se puede crear un Boleto para un Evento cuya Fecha ya pasó
+        var evento = await _db.Eventos.FirstOrDefaultAsync(e => e.Id == boleto.EventoId);
+        if (evento is null)
+            return BadRequest("El evento no existe.");
+
+        if (evento.Fecha < DateTime.Now)
+            return BadRequest("No se puede crear un boleto para un evento cuya fecha ya pasó.");
+
+        
+
+
 
     _db.Boletos.Add(boleto);
         await _db.SaveChangesAsync();
