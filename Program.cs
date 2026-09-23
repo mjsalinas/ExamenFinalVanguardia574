@@ -1,7 +1,20 @@
+using ExamenFinalVanguardia574;
+using Microsoft.EntityFrameworkCore;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<LibraryDbContext>(options => 
+options.UseSqlite(builder.Configuration.GetConnectionString("Default")
+?? "Data Source=biblioteca.db"));
+
+
+builder.Services.AddDbContext<LibraryDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

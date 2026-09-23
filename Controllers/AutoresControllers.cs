@@ -19,10 +19,34 @@ public class AutoresController : ControllerBase
         new(@"^[\p{L}\s'\-\.]+$", RegexOptions.Compiled);
 
     private readonly LibraryDbContext _db;
+   public AutoresController(LibraryDbContext db) => _db = db;
 
-    public AutoresController(LibraryDbContext db) => _db = db;
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var autores = await _db.Autores.ToListAsync();
 
-    
-    
+        // Transformación de lectura (futuro AppService): catálogo ordenado por nombre.
+        var catalogo = autores
+            .OrderBy(a => a.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(a => a.Nacionalidad, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
 
-   
+        return Ok(catalogo);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El identificador del autor debe ser mayor que cero.");
+
+        var autor = await _db.Autores.FirstOrDefaultAsync(a => a.Id == id);
+        if (autor is null) return NotFound();
+        return Ok(autor);
+    }
+
+
+
+
+}
