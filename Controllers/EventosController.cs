@@ -29,7 +29,7 @@ public class EventosController : ControllerBase
 
         return Ok(evento);
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> Create(Evento evento)
     {
@@ -49,5 +49,47 @@ public class EventosController : ControllerBase
             nameof(GetById),
             new { id = nuevoEvento.Id },
             nuevoEvento);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Evento eventoActualizado)
+    {
+        var evento = await _db.Eventos.FindAsync(id);
+
+        if (evento is null)
+            return NotFound();
+
+        evento.Nombre = eventoActualizado.Nombre;
+        evento.Ciudad = eventoActualizado.Ciudad;
+        evento.Fecha = eventoActualizado.Fecha;
+        evento.CapacidadTotal = eventoActualizado.CapacidadTotal;
+        evento.PrecioBoleto = eventoActualizado.PrecioBoleto;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(evento);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var evento = await _db.Eventos.FindAsync(id);
+
+        if (evento is null)
+            return NotFound();
+
+        var tieneBoletos = await _db.Boletos
+            .AnyAsync(b => b.EventoId == id);
+
+        if (tieneBoletos)
+        {
+            return Conflict(
+                "No se puede eliminar un evento que tiene boletos vendidos.");
+        }
+
+        _db.Eventos.Remove(evento);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
     }
 }
