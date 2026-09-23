@@ -1,2 +1,6 @@
 <Solution>
+  <Folder Name="/TicketMonolito/">
+    <Project Path="TicketMonolito/TicketMonolito.Domain.csproj" />
+  </Folder>
+  <Project Path="TicketMonolito/TicketMonolito.csproj" />
 </Solution>
