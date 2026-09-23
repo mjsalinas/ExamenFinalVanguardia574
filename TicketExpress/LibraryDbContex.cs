@@ -10,4 +10,5 @@ public class LibraryDbContext: DbContext
 
    
     public DbSet<Evento> Eventos => Set<Evento>();
+    public DbSet<Boleto> Boletos => Set<Boleto>();
 }
