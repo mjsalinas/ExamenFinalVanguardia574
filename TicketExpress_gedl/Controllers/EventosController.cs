@@ -151,5 +151,6 @@ public class EventosController : ControllerBase
         texto = Regex.Replace(texto, @"\s+", " ");
         return texto;
     }
+
 }
 
