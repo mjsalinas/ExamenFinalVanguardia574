@@ -1,0 +1,6 @@
+@TicketExpress_gedl_HostAddress = http://localhost:5152
+
+GET {{TicketExpress_gedl_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
