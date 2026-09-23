@@ -1,6 +1,13 @@
+using TicketExpress;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<TicketExpressContext>(options => 
+options.UseSqlite(builder.Configuration.GetConnectionString("Default")
+?? "Data Source=tickets.db"));
+
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
