@@ -1,33 +1,56 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TicketExpress.Models;
+
 
 namespace TicketExpress.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class EventosController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        private readonly LibraryDbContext _db;
 
-        private readonly ILogger<WeatherForecastController> _logger;
+        public EventosController(LibraryDbContext db) => _db = db;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        private const int NombreMaxLength = 100;
+        private const int CiudadNombreMinLength = 3;
+        private const int CiudadNombreMaxLength = 100;
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Evento evento)
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-        }
+            // Transformación de datos (futuro AppService)
+            AplicarTransformacion(evento);
+
+           private const int NombreMinLength = 3;
+   
+
+        private static void AplicarTransformacion(Evento evento)
+    {
+        evento.Ciudad = NormalizarNombre(evento.Ciudad);
+
     }
+    private static string NormalizarNombre(string? nombreciudad)
+    {
+        if (string.IsNullOrWhiteSpace(nombreciudad))
+            return string.Empty;
+
+        var colapsado = Regex.Replace(nombreciudad.Trim(), @"\s+", " ");
+        var cultura = CultureInfo.GetCultureInfo("es-HN");
+        return cultura.TextInfo.ToTitleCase(colapsado.ToLower(cultura));
+    
 }
+
+
+
+}
+
+
+
+    
+
