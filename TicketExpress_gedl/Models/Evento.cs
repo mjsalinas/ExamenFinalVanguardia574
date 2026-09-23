@@ -7,4 +7,5 @@ public class Evento
     public string Ciudad { get; set; } = string.Empty;
     public DateTime Fecha { get; set; } = DateTime.MinValue;
     public int CapacidadTotal { get; set; } = 0;
+    public decimal PrecioBoleto { get; set; } = 0;
 }
