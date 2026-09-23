@@ -18,7 +18,7 @@ private readonly LibraryDbContext _db;
         var Boletos = await _db.Boletos.ToListAsync();
         return Ok(Boletos);
     }
-    }
+    
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
@@ -56,6 +56,7 @@ private readonly LibraryDbContext _db;
         _db.Boletos.Remove(boleto);
         await _db.SaveChangesAsync();
         return NoContent();
+    }
     }
 
 }
