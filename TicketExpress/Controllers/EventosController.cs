@@ -9,7 +9,8 @@ namespace TicketExpress.Controllers
     [Route("api/[controller]")]
     public class EventosController : ControllerBase
     {
-        // Se estandarizó el nombre a _context (antes tenías _db y _context mezclados)
+        
+        
         private readonly TicketExpressContext _context;
 
         public EventosController(TicketExpressContext context)
@@ -91,5 +92,9 @@ namespace TicketExpress.Controllers
 
             return NoContent();
         }
+    }
+
+    internal class TicketExpressContext
+    {
     }
 }
