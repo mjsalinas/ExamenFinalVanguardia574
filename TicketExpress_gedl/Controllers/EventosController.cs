@@ -41,16 +41,19 @@ public class EventosController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Evento evento)
     {
+        var eventoNormalizado = TextNormalizer(evento.Nombre);
 
-            //nombre: obligatorio, entre 3 y 100 caracteres
-            if(evento.Nombre.Length < 3 || evento.Nombre.Length > 100)
+        //nombre: obligatorio, entre 3 y 100 caracteres
+        if (eventoNormalizado.Length < 3 || eventoNormalizado.Length > 100)
             return BadRequest("El nombre del evento debe tener entre 3 y 100 caracteres.");
 
-            //Ciudad: obligatoria, entre 2 y 60 caracteres, solo letras, espacios, guiones o apóstrofes.
+            
+
+            //Ciudad: obligatoria, entre 2 y 60 caracteres, solo letras, espacios, guiones o apóstrofes
             if(evento.Ciudad.Length < 2 || evento.Ciudad.Length > 60)
                 return BadRequest("La ciudad del evento debe tener entre 2 y 60 caracteres.");
 
-        //Fecha: obligatoria, no puede ser una fecha ya pasada (debe ser hoy o en el futuro).
+        //Fecha: obligatoria, no puede ser una fecha ya pasada debe ser hoy o en el futuro
         if(evento.Fecha < DateTime.Today)
             return BadRequest("La fecha del evento no puede ser una fecha pasada.");
 
@@ -104,6 +107,12 @@ public class EventosController : ControllerBase
         //libro.AnioPublicacion = libroActualizado.AnioPublicacion;
         //libro.AutorId = libroActualizado.AutorId;
 
+        evento.Nombre = TextNormalizer(eventoActualizado.Nombre);
+        evento.Ciudad = TextNormalizer(eventoActualizado.Ciudad);
+        evento.Fecha = eventoActualizado.Fecha;
+        evento.CapacidadTotal = eventoActualizado.CapacidadTotal;
+
+
         await _db.SaveChangesAsync();
         return Ok(evento);
     }
@@ -129,5 +138,17 @@ public class EventosController : ControllerBase
         return NoContent();
     }
 
+    /*• Una función de normalización de texto (recorta espacios, colapsa espacios repetidos,
+    capitaliza tipo nombre propio) reutilizada en Nombre y Ciudad de Evento, y en
+        NombreComprador de Boleto — el mismo patrón de TextNormalizer que usaron en
+        Biblioteca.*/
 
-}
+    private static string TextNormalizer(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto))
+            return string.Empty;
+        texto = texto.Trim();
+        texto = Regex.Replace(texto, @"\s+", " ");
+        return texto;
+    }
+

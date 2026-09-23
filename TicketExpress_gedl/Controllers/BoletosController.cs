@@ -101,4 +101,15 @@ guiones o apóstrofes.
     }
 
 
+    /*Una función que calcule los boletos disponibles restantes de un Evento
+        (CapacidadTotal menos los ya vendidos) — reutilizada tanto en la Regla 2 como en
+        cualquier otro lugar del código donde necesiten ese mismo dato.*/
+
+    private async Task<int> CalcularBoletosDisponibles(int eventoId)
+    {
+        return 0;
+
+            
+    }
+
 }
