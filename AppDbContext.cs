@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ExamenFinalVanguardia574.Models;
 
+
 namespace ExamenFinalVanguardia574;
 
 public class AppDbContext: DbContext
