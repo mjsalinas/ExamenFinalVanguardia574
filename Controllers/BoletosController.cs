@@ -1,191 +1,174 @@
-using System.Globalization;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ExamenFinalVanguardia574  .Models;
+using ExamenFinalVanguardia574.Models;
 
-namespace ExamenFinalVanguardia574.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class AutoresController : ControllerBase
+namespace ExamenFinalVanguardia574.Controllers
 {
-    private const int NombreMinLength = 2;
-    private const int NombreMaxLength = 100;
-    private const int NacionalidadMinLength = 3;
-    private const int NacionalidadMaxLength = 60;
-
-    private static readonly Regex NombreValidoRegex =
-        new(@"^[\p{L}\s'\-\.]+$", RegexOptions.Compiled);
-
-    private readonly LibraryDbContext _db;
-
-    public AutoresController(LibraryDbContext db) => _db = db;
-
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [ApiController]
+    [Route("api/[controller]")]
+    public class BoletosController : ControllerBase
     {
-        var autores = await _db.Autores.ToListAsync();
+        private readonly AppDbContext _context;
 
-        // Transformación de lectura (futuro AppService): catálogo ordenado por nombre.
-        var catalogo = autores
-            .OrderBy(a => a.Nombre, StringComparer.CurrentCultureIgnoreCase)
-            .ThenBy(a => a.Nacionalidad, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
+        public BoletosController(AppDbContext context)
+        {
+            _context = context;
+        }
 
-        return Ok(catalogo);
-    }
+        // GET: api/Boletos
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Boleto>>> GetBoletos()
+        {
+            var boletos = await _context.Boletos.ToListAsync();
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
-    {
-        if (id <= 0)
-            return BadRequest("El identificador del autor debe ser mayor que cero.");
+            return Ok(boletos);
+        }
 
-        var autor = await _db.Autores.FirstOrDefaultAsync(a => a.Id == id);
-        if (autor is null) return NotFound();
-        return Ok(autor);
-    }
+        // GET: api/Boletos/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Boleto>> GetBoleto(int id)
+        {
+            var boleto = await _context.Boletos
+                .FirstOrDefaultAsync(b => b.Id == id);
 
-    [HttpPost]
-    public async Task<IActionResult> Create(Boleto autor)
-    {
-        // Transformación de datos (futuro AppService)
-        AplicarTransformacion(Boleto);
+            if (boleto == null)
+            {
+                return NotFound(new
+                {
+                    mensaje = "El boleto no existe."
+                });
+            }
 
-        // Lógica de negocio mezclada directamente en el controlador (a propósito)
-        if (string.IsNullOrWhiteSpace(autor.Nombre))
-            return BadRequest("El nombre del autor es obligatorio.");
+            return Ok(boleto);
+        }
 
-        var errorValidacion = ValidarAutor(Boleto);
-        if (errorValidacion is not null)
-            return BadRequest(errorValidacion);
+        // GET: api/Boletos/evento/5
+        [HttpGet("evento/{eventoId}")]
+        public async Task<ActionResult<IEnumerable<Boleto>>> GetBoletosPorEvento(
+            int eventoId)
+        {
+            // Verificar que el evento exista
+            var eventoExiste = await _context.Eventos
+                .AnyAsync(e => e.Id == eventoId);
 
-        // Regla de negocio (futuro Domain Service): no registrar autores duplicados.
-        var duplicado = await ExisteAutorDuplicadoAsync(autor.Nombre, autor.Nacionalidad);
-        if (duplicado)
-            return Conflict("Ya existe un autor con el mismo nombre y nacionalidad.");
+            if (!eventoExiste)
+            {
+                return NotFound(new
+                {
+                    mensaje = "El evento no existe."
+                });
+            }
 
-        _db.Autores.Add(autor);
-        await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetAll), new { id = autor.Id }, autor);
-    }
+            var boletos = await _context.Boletos
+                .Where(b => b.EventoId == eventoId)
+                .ToListAsync();
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Autor autorActualizado)
-    {
-        if (id <= 0)
-            return BadRequest("El identificador del autor debe ser mayor que cero.");
+            return Ok(boletos);
+        }
 
-        var autor = await _db.Autores.FindAsync(id);
-        if (autor is null) return NotFound();
+        // POST: api/Boletos
+        [HttpPost]
+        public async Task<ActionResult<Boleto>> ComprarBoleto(
+            Boleto boleto)
+        {
+            // Buscar el evento
+            var evento = await _context.Eventos
+                .FirstOrDefaultAsync(e => e.Id == boleto.EventoId);
 
-        // Transformación de datos (futuro AppService)
-        AplicarTransformacion(autorActualizado);
+            if (evento == null)
+            {
+                return NotFound(new
+                {
+                    mensaje = "El evento no existe."
+                });
+            }
 
-        // Validaciones lógicas (futuro Domain Service)
-        if (string.IsNullOrWhiteSpace(autorActualizado.Nombre))
-            return BadRequest("El nombre del autor es obligatorio.");
+            // Validar cantidad
+            if (boleto.Cantidad <= 0)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "La cantidad de boletos debe ser mayor que 0."
+                });
+            }
 
-        var errorValidacion = ValidarAutor(autorActualizado);
-        if (errorValidacion is not null)
-            return BadRequest(errorValidacion);
+            // Validar nombre
+            if (string.IsNullOrWhiteSpace(boleto.NombreComprador))
+            {
+                return BadRequest(new
+                {
+                    mensaje = "El nombre del comprador es obligatorio."
+                });
+            }
 
-        // Regla de negocio (futuro Domain Service): unicidad excluyendo el propio registro.
-        var duplicado = await ExisteAutorDuplicadoAsync(
-            autorActualizado.Nombre,
-            autorActualizado.Nacionalidad,
-            id);
-        if (duplicado)
-            return Conflict("Ya existe un autor con el mismo nombre y nacionalidad.");
+            // Validar correo
+            if (string.IsNullOrWhiteSpace(boleto.CorreoComprador))
+            {
+                return BadRequest(new
+                {
+                    mensaje = "El correo del comprador es obligatorio."
+                });
+            }
 
-        autor.Nombre = autorActualizado.Nombre;
-        autor.Nacionalidad = autorActualizado.Nacionalidad;
+            // Calcular boletos vendidos
+            int boletosVendidos = await _context.Boletos
+                .Where(b => b.EventoId == boleto.EventoId)
+                .SumAsync(b => (int?)b.Cantidad) ?? 0;
 
-        await _db.SaveChangesAsync();
-        return Ok(autor);
-    }
+            // Calcular boletos disponibles
+            int boletosDisponibles =
+                evento.CapacidadTotal - boletosVendidos;
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        if (id <= 0)
-            return BadRequest("El identificador del autor debe ser mayor que cero.");
+            // Verificar disponibilidad
+            if (boleto.Cantidad > boletosDisponibles)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "No hay suficientes boletos disponibles.",
+                    capacidadTotal = evento.CapacidadTotal,
+                    boletosVendidos = boletosVendidos,
+                    boletosDisponibles = boletosDisponibles,
+                    boletosSolicitados = boleto.Cantidad
+                });
+            }
 
-        var autor = await _db.Autores.FindAsync(id);
-        if (autor is null) return NotFound();
+            // Registrar automáticamente la fecha de compra
+            boleto.FechaCompra = DateTime.Now;
 
-        // Regla de negocio (futuro Domain Service):
-        // un autor con libros en el catálogo no puede eliminarse (integridad de dominio).
-        var tieneLibros = await _db.Libros.AnyAsync(l => l.AutorId == id);
-        if (tieneLibros)
-            return Conflict("No se puede eliminar un autor que tiene libros asociados.");
+            _context.Boletos.Add(boleto);
 
-        _db.Autores.Remove(autor);
-        await _db.SaveChangesAsync();
-        return NoContent();
-    }
+            await _context.SaveChangesAsync();
 
-    // --- Transformación de datos: se extraerá a AutorAppService ---
+            return CreatedAtAction(
+                nameof(GetBoleto),
+                new { id = boleto.Id },
+                boleto
+            );
+        }
 
-    private static void AplicarTransformacion(Autor autor)
-    {
-        autor.Nombre = NormalizarNombrePropio(autor.Nombre);
-        autor.Nacionalidad = NormalizarNombrePropio(autor.Nacionalidad);
-    }
+        // DELETE: api/Boletos/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> CancelarBoleto(int id)
+        {
+            var boleto = await _context.Boletos
+                .FirstOrDefaultAsync(b => b.Id == id);
 
-    private static string NormalizarNombrePropio(string? valor)
-    {
-        if (string.IsNullOrWhiteSpace(valor))
-            return string.Empty;
+            if (boleto == null)
+            {
+                return NotFound(new
+                {
+                    mensaje = "El boleto no existe."
+                });
+            }
 
-        var colapsado = Regex.Replace(valor.Trim(), @"\s+", " ");
-        var cultura = CultureInfo.GetCultureInfo("es-HN");
-        return cultura.TextInfo.ToTitleCase(colapsado.ToLower(cultura));
-    }
+            _context.Boletos.Remove(boleto);
 
-    // --- Validaciones lógicas: se extraerán a AutorDomainService ---
+            await _context.SaveChangesAsync();
 
-    private static string? ValidarAutor(Autor autor)
-    {
-        if (autor.Nombre.Length < NombreMinLength)
-            return $"El nombre debe tener al menos {NombreMinLength} caracteres.";
-
-        if (autor.Nombre.Length > NombreMaxLength)
-            return $"El nombre no puede superar los {NombreMaxLength} caracteres.";
-
-        if (!NombreValidoRegex.IsMatch(autor.Nombre))
-            return "El nombre solo puede contener letras, espacios, guiones o apóstrofos.";
-
-        if (string.IsNullOrWhiteSpace(autor.Nacionalidad))
-            return "La nacionalidad del autor es obligatoria.";
-
-        if (autor.Nacionalidad.Length < NacionalidadMinLength)
-            return $"La nacionalidad debe tener al menos {NacionalidadMinLength} caracteres.";
-
-        if (autor.Nacionalidad.Length > NacionalidadMaxLength)
-            return $"La nacionalidad no puede superar los {NacionalidadMaxLength} caracteres.";
-
-        if (!NombreValidoRegex.IsMatch(autor.Nacionalidad))
-            return "La nacionalidad solo puede contener letras, espacios, guiones o apóstrofos.";
-
-        return null;
-    }
-
-    // --- Reglas de negocio: se extraerán a AutorDomainService ---
-
-    private async Task<bool> ExisteAutorDuplicadoAsync(
-        string nombre,
-        string nacionalidad,
-        int? excluirId = null)
-    {
-        var query = _db.Autores.Where(a =>
-            a.Nombre.ToLower() == nombre.ToLower() &&
-            a.Nacionalidad.ToLower() == nacionalidad.ToLower());
-
-        if (excluirId.HasValue)
-            query = query.Where(a => a.Id != excluirId.Value);
-
-        return await query.AnyAsync();
+            return Ok(new
+            {
+                mensaje = "Boleto cancelado correctamente."
+            });
+        }
     }
 }
