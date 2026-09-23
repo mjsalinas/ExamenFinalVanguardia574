@@ -1,3 +1,8 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ExamenFinalVanguardia574.Data;
+using ExamenFinalVanguardia574.Model;
+
 namespace ExamenFinalVanguardia574.Controllers;
 
 [ApiController]
