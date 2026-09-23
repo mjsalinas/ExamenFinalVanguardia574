@@ -21,6 +21,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider
+        .GetRequiredService<TicketExpressDbContext>();
+
+    db.Database.Migrate();
+}
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
