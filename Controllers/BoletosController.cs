@@ -25,5 +25,33 @@ public class BoletosController : ControllerBase
         }
         return Ok(boleto);
     }
-}
+[HttpPost]
+public async Task<IActionResult> Crear(Boleto boleto)
+{
+    if (string.IsNullOrWhiteSpace(boleto.NombreComprador) ||
+        boleto.NombreComprador.Length < 2 ||
+        boleto.NombreComprador.Length > 100 ||
+        !Regex.IsMatch(boleto.NombreComprador, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$"))
+    {
+        return BadRequest("NombreComprador: obligatorio, entre 2 y 100 caracteres, solo letras, espacios, guiones o apóstrofes.");
+    }
 
+    if (string.IsNullOrWhiteSpace(boleto.CorreoComprador) ||
+        !new EmailAddressAttribute().IsValid(boleto.CorreoComprador))
+    {
+        return BadRequest("CorreoComprador: obligatorio y debe tener un formato de correo válido.");
+    }
+
+    if (boleto.Cantidad <= 0)
+    {
+        return BadRequest("Cantidad: obligatorio, debe ser un entero mayor a 0.");
+    }
+
+    boleto.FechaCompra = DateTime.Now;
+
+    _db.Boletos.Add(boleto);
+    await _db.SaveChangesAsync();
+
+    return Ok(boleto);
+}
+}
