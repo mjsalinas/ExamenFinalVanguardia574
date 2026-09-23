@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using ExamenFinalVanguardia574.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ExamenFinalVanguardia574.Controllers;
 
