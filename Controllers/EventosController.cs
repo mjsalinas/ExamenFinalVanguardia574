@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketExpress.Models;
 using TicketExpress.Common;
+using TicketExpress.Validation;
 
 namespace TicketExpress.Controllers;
 
@@ -45,6 +46,10 @@ public class EventosController : ControllerBase
     {
         evento.Nombre = TextNormalizer.NormalizarNombrePropio(evento.Nombre);
         evento.Ciudad = TextNormalizer.NormalizarNombrePropio(evento.Ciudad);
+
+        var error = EventoValidator.Validar(evento);
+        if (error is not null)
+            return BadRequest(error);
         _db.Eventos.Add(evento);
         await _db.SaveChangesAsync();
 
