@@ -47,24 +47,24 @@ public class EventosController : ControllerBase
         if (eventoNormalizado.Length < 3 || eventoNormalizado.Length > 100)
             return BadRequest("El nombre del evento debe tener entre 3 y 100 caracteres.");
 
-            
 
-            //Ciudad: obligatoria, entre 2 y 60 caracteres, solo letras, espacios, guiones o apóstrofes
-            if(evento.Ciudad.Length < 2 || evento.Ciudad.Length > 60)
-                return BadRequest("La ciudad del evento debe tener entre 2 y 60 caracteres.");
+
+        //Ciudad: obligatoria, entre 2 y 60 caracteres, solo letras, espacios, guiones o apóstrofes
+        if (evento.Ciudad.Length < 2 || evento.Ciudad.Length > 60)
+            return BadRequest("La ciudad del evento debe tener entre 2 y 60 caracteres.");
 
         //Fecha: obligatoria, no puede ser una fecha ya pasada debe ser hoy o en el futuro
-        if(evento.Fecha < DateTime.Today)
+        if (evento.Fecha < DateTime.Today)
             return BadRequest("La fecha del evento no puede ser una fecha pasada.");
 
 
         //• CapacidadTotal: obligatorio, entero mayor a 0
-        if(evento.CapacidadTotal <= 0)
+        if (evento.CapacidadTotal <= 0)
             return BadRequest("La capacidad total del evento es obligatoria y debe ser un número mayor que cero.");
 
         //• PrecioBoleto: obligatorio, no puede ser negativo (0 es válido, para eventos gratuitos)
-        if(evento.PrecioBoleto < 0)
-            return BadRequest("El precio del boleto es obligatorio y no puede ser negativo.");  
+        if (evento.PrecioBoleto < 0)
+            return BadRequest("El precio del boleto es obligatorio y no puede ser negativo.");
 
 
         _db.Eventos.Add(evento);
@@ -130,7 +130,7 @@ public class EventosController : ControllerBase
         // No se puede eliminar(DELETE) un Evento que ya tiene al menos un Boleto vendido
         var boletosVendidos = await _db.Boletos.CountAsync(b => b.EventoId == id);
         if (boletosVendidos > 0)
-            return Conflict("No se puede eliminar un evento que ya tiene boletos vendidos.");   
+            return Conflict("No se puede eliminar un evento que ya tiene boletos vendidos.");
 
 
         _db.Eventos.Remove(evento);
@@ -151,4 +151,5 @@ public class EventosController : ControllerBase
         texto = Regex.Replace(texto, @"\s+", " ");
         return texto;
     }
+}
 
