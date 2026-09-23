@@ -8,5 +8,10 @@ namespace ExamenFinalVanguardia574.Model
         public DateTime Fecha { get; set; }
         public int CapacidadTotal { get; set; }
         public decimal PrecioBoleto { get; set; }
+        public ICollection<Boleto> Boletos { get; set; }
     }
 }
+
+
+
+
